@@ -109,23 +109,6 @@
                    });
             });
             
-            // creating slider
-            //d3.select('#slider')
-            //    .call(d3.slider().axis(true).min(1910).max(2020).step(10)
-            //    // if slider value changes
-            //    .on("slide", function (evt, value) {
-            //	   svg.selectAll("circle")
-            //	       // set corresponding column name from json as text to retrieve it easily for tooltips
-            //	       .text('oeuvres_' + (value-10) + '_' + (value-1))
-            //	       // column name from point geojson looks like this : oeuvre_1910_1919
-            //	       .transition()
-            //	       .duration(500)
-            //	       .attr('r', function(d){
-            //	           colname = 'oeuvres_' + (value-10) + '_' + (value-1);
-            //	           return calc_radius(d.properties[colname])
-            //	       })
-            //    })
-            //);
             
             // time slider
             var dataTime = d3.range(0, 12).map(function(d) {
@@ -181,9 +164,28 @@
                 .call(zoom);
                 
             function zoomed(){
+                // variable for zoom scale
+                k = d3.event.transform.k;
+                // zoom for all groups
                 g1.attr("transform", d3.event.transform);
                 g2.attr("transform", d3.event.transform);
                 g3.attr("transform", d3.event.transform);
+                // rescale contries outline so that it does not get too wide when zooming
+                g1.selectAll("path")
+                    .attr("d", path.projection(projection))
+                    .attr('stroke-width', 1/k);
+                // rescale graticules outline so that it does not get too wide when zooming
+                g2.selectAll("path")
+                    .attr("d", path.projection(projection))
+                    .attr('stroke-width', 1/k);
+                // rescale circle size so that they don't get too big when zooming
+                g3.selectAll("circle")
+                    //.attr("r", function() {console.log(zoom.scale()); return d3.select(this).attr("r")/zoom.scale()});
+                    .attr("r", function(d) {
+                        year = (sliderTime.value().getFullYear());
+                        colname = 'oeuvres_' + (year-10) + '_' + (year-1);
+                        return calc_radius(d.properties[colname])/k
+                    });
             }  
 
             
