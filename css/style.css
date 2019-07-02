@@ -4,7 +4,8 @@
 }
 
 #slider{
-    margin: 20px;
+    border: 1px solid gainsboro;
+    margin: 0px;
 }
 
 /* countries style */
@@ -39,9 +40,4 @@
     border: 0px;
     border-radius: 8px;
     pointer-events: none;
-}
-
-/* div for slider */
-#slider{
-    width: 960px;
 }
