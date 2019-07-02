@@ -6,9 +6,8 @@
 		<script type="text/javascript" src="http://d3js.org/d3.v5.min.js"></script>
 		<script src="https://d3js.org/d3-geo.v1.min.js"></script>
 		<script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
-		<script src="js/d3.slider.js"></script><!-- http://github.com/turban/d3.slider -->
+		<script src="https://unpkg.com/d3-simple-slider"></script><!-- https://github.com/johnwalley/d3-simple-slider -->
 		<link rel="stylesheet" type="text/css" href="css/style.css">
-		<link rel="stylesheet" type="text/css" href="css/d3.slider.css">
 	</head>
     <body>
         <div id="map"></div>
@@ -17,7 +16,7 @@
         <script type="text/javascript">
         
             // width and height of svg
-            var w = (window.innerWidth)*9/12;
+            var w = window.innerWidth/13*9;
             var h = 500;
             
             // creating svg element
@@ -127,6 +126,49 @@
             //	       })
             //    })
             //);
+            
+            // time slider
+            var dataTime = d3.range(0, 12).map(function(d) {
+                return new Date(1910 + 10*d, 1, 1); // every 10 years from 1910, with 12 values (up to 2020)
+            });
+            
+            var sliderTime = d3
+                .sliderBottom()
+                .min(d3.min(dataTime))
+                .max(d3.max(dataTime))
+                .step(1000 * 60 * 60 * 24 * 365 * 10) // step : every ten years
+                .width(w/13*9)
+                .tickFormat(d3.timeFormat('%Y'))
+                .tickValues(dataTime)
+                .default(new Date(1910, 1, 1)) // default date 01/01/1910
+                //.on('onchange', val => {
+                //    d3.select('p#value-time').text(d3.timeFormat('%Y')(val));
+                .on('onchange', function () {
+                   year = (sliderTime.value().getFullYear());
+            	   g3.selectAll("circle")
+            	       // set corresponding column name from json as text to retrieve it easily for tooltips
+            	       .text('oeuvres_' + (year-10) + '_' + (year-1))
+            	       // column name from point geojson looks like this : oeuvre_1910_1919
+            	       .transition()
+            	       .duration(500)
+            	       .attr('r', function(d){
+            	           colname = 'oeuvres_' + (year-10) + '_' + (year-1);
+            	           return calc_radius(d.properties[colname])
+            	       })
+                })
+        
+            var gTime = d3
+                .select('#slider')
+                .append('svg')
+                .attr('width', w)
+                .attr('height', 100)
+                .append('g')
+                .attr('transform', 'translate(20,20)');
+            
+            gTime.call(sliderTime);
+            
+            d3.select('p#value-time').text(d3.timeFormat('%Y')(sliderTime.value()));
+            
             
             // zoom and pan with mouse
             var zoom = d3.zoom()
