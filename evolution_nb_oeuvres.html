@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>ADONA oeuvres</title>
-		<script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+		<script type="text/javascript" src="http://d3js.org/d3.v4.min.js"></script>
 		<script src="https://d3js.org/d3-geo.v1.min.js"></script>
 		<script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
 		<script src="js/d3.slider.js"></script><!-- http://github.com/turban/d3.slider -->
@@ -29,7 +29,7 @@
             // map projection    
             var projection = d3.geoRobinson()
                 .scale(150);
-            var path = d3.geo.path()
+            var path = d3.geoPath()
                 .projection(projection);
                 
             // div for tooltips
@@ -111,48 +111,38 @@
             });
             
             // creating slider
-            d3.select('#slider')
-                .call(d3.slider().axis(true).min(1910).max(2020).step(10)
-                // if slider value changes
-                .on("slide", function (evt, value) {
-            	   svg.selectAll("circle")
-            	       // set corresponding column name from json as text to retrieve it easily for tooltips
-            	       .text('oeuvres_' + (value-10) + '_' + (value-1))
-            	       // column name from point geojson looks like this : oeuvre_1910_1919
-            	       .transition()
-            	       .duration(500)
-            	       .attr('r', function(d){
-            	           colname = 'oeuvres_' + (value-10) + '_' + (value-1);
-            	           return calc_radius(d.properties[colname])
-            	       })
-                })
-            );
+            //d3.select('#slider')
+            //    .call(d3.slider().axis(true).min(1910).max(2020).step(10)
+            //    // if slider value changes
+            //    .on("slide", function (evt, value) {
+            //	   svg.selectAll("circle")
+            //	       // set corresponding column name from json as text to retrieve it easily for tooltips
+            //	       .text('oeuvres_' + (value-10) + '_' + (value-1))
+            //	       // column name from point geojson looks like this : oeuvre_1910_1919
+            //	       .transition()
+            //	       .duration(500)
+            //	       .attr('r', function(d){
+            //	           colname = 'oeuvres_' + (value-10) + '_' + (value-1);
+            //	           return calc_radius(d.properties[colname])
+            //	       })
+            //    })
+            //);
             
-            zoom = d3.behavior.zoom()
-                // min and max zoom
+            // zoom and pan with mouse
+            var zoom = d3.zoom()
                 .scaleExtent([1,40])
-                .on("zoom", function () {
-                	g1.attr("transform", "translate(" + d3.event.translate.join(",") + ")scale(" + d3.event.scale + ")");
-                	g2.attr("transform", "translate(" + d3.event.translate.join(",") + ")scale(" + d3.event.scale + ")");
-                	g3.attr("transform", "translate(" + d3.event.translate.join(",") + ")scale(" + d3.event.scale + ")");
-                	// rescale contries outline so that it does not get too wide when zooming
-                    g1.selectAll("path")
-                        .attr("d", path.projection(projection))
-                        .attr('stroke-width', 1/(zoom.scale()));
-                    // rescale graticules outline so that it does not get too wide when zooming
-                    g2.selectAll("path")
-                        .attr("d", path.projection(projection))
-                        .attr('stroke-width', 1/(zoom.scale()));
-                    // rescale circle size so that they don't get too big when zooming
-                    g3.selectAll("circle")
-                        //.attr("r", function() {console.log(zoom.scale()); return d3.select(this).attr("r")/zoom.scale()});
-                        .attr("r", function(d) {return calc_radius(d.properties[colname])/zoom.scale()});
-                });
+                .translateExtent([[0,0], [w, h]])
+                .extent([[0, 0], [w, h]])
+                .on("zoom", zoomed);
                 
             svg
-    	       .call(zoom)
-               .call(zoom.event);
-                    
+                .call(zoom);
+                
+            function zoomed(){
+                g1.attr("transform", d3.event.transform);
+                g2.attr("transform", d3.event.transform);
+                g3.attr("transform", d3.event.transform);
+            }  
 
             
         </script>
