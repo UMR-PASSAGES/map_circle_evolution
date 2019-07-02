@@ -1,0 +1,47 @@
+
+#map{
+    border: 0px solid gainsboro;
+}
+
+#slider{
+    margin: 20px;
+}
+
+/* countries style */
+.pays{
+    fill: #E3E3E3;
+    stroke: white;
+    stroke-width: 0.5;
+}
+
+/* graticules style */
+.graticules{
+    fill: none;
+    stroke: #E3E3E3;
+}
+
+/* points (sites) style */
+.site{
+    fill: orange;
+    opacity: 0.6;
+    stroke: orange;
+    stroke-width: 5;
+    stroke-opacity: 0;
+}
+
+/* tooltips */
+.tooltip{
+    position: absolute;
+    width: 120px;
+    height: 60px;
+    padding: 2px;
+    font: 12px sans-serif;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+/* div for slider */
+#slider{
+    width: 960px;
+}
