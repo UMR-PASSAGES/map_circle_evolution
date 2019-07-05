@@ -1,10 +1,10 @@
 
 #map{
-    border: 1px solid gainsboro;
+    border: 0px solid gainsboro;
 }
 
 #slider{
-    border: 1px solid gainsboro;
+    border: 0px solid gainsboro;
     margin: 0px;
 }
 
@@ -21,7 +21,16 @@
 }
 
 /* points (sites) style */
-.site{
+.site_artiste{
+    fill: #00c6bc;
+    opacity: 0.6;
+    stroke: #00c6bc;
+    stroke-width: 5;
+    stroke-opacity: 0;
+}
+
+/* points (sites) style */
+.site_oeuvre{
     fill: orange;
     opacity: 0.6;
     stroke: orange;
