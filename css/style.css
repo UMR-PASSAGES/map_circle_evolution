@@ -38,6 +38,15 @@
     stroke-opacity: 0;
 }
 
+/* points (sites) style */
+.site_creation{
+    fill: black;
+    opacity: 0.6;
+    stroke: black;
+    stroke-width: 5;
+    stroke-opacity: 0;
+}
+
 /* tooltips */
 .tooltip{
     position: absolute;

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>ADONA sites</title>
+		<script type="text/javascript" src="http://d3js.org/d3.v5.min.js"></script>
+		<script src="https://d3js.org/d3-geo.v1.min.js"></script>
+		<script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+		<script src="https://unpkg.com/d3-simple-slider"></script><!-- https://github.com/johnwalley/d3-simple-slider -->
+		<link rel="stylesheet" type="text/css" href="css/style.css">
+	</head>
+    <body>
+        <div id="map"></div>
+        <div id="slider"></div>
+        
+        <script type="text/javascript">
+        
+            // width and height of svg
+            var w = window.innerWidth;
+            var h = 500;
+            
+            // creating svg element
+            var svg = d3.select('#map')
+                .append('svg')
+                .attr('width', w)
+                .attr('height', h);
+            
+            // map projection    
+            var projection = d3.geoRobinson()
+                .scale(130);
+            var path = d3.geoPath()
+                .projection(projection);
+                
+            // div for tooltips
+            var div = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                
+            // calculate radius of proportional circles
+            var calc_radius = function (d) {
+            	var rayon = 3 * Math.sqrt(d/Math.PI);
+            	return rayon;
+            }
+            
+            // group for countries
+            var g1 = svg.append('g');
+            
+            // group for graticules
+            var g2 = svg.append('g');
+            
+            // group for circles
+            var g3 = svg.append('g');
+            
+            // adding countries from Natural Earth  
+            d3.json('data/ne_110m_admin_0_countries.json').then(function (json) {
+            	g1.selectAll('path')
+            	   .data(json.features)
+            	   .enter()
+            	   .append('path')
+            	   .attr('d', path)
+            	   .attr('class', 'pays')
+            	   //.attr('stroke-width', function () {
+            	   	//console.log(zoom.scale());
+            	   //}) 
+            });
+            
+            // adding graticules
+            d3.json('data/graticules.json').then(function (json) {
+            	g2.selectAll('path')
+            	   .data(json.features)
+            	   .enter()
+            	   .append('path')
+            	   .attr('d', path)
+            	   .attr('class', 'graticules')
+            	   //.attr('stroke-width', function () {
+            	   	//console.log(zoom.scale());
+            	   //}) 
+            });
+            
+            // adding ADONA sites
+            d3.json('data/evol_sites.geojson').then(function (json) {
+            	g3.selectAll('circle')
+            	   .data(json.features)
+            	   .enter()
+            	   .append('circle')
+            	   .attr('r', 0)
+            	   .attr('cx',function(d) { return projection(d.geometry.coordinates)[0] })
+            	   .attr('cy',function(d) { return projection(d.geometry.coordinates)[1] })
+            	   .attr('class', 'site_creation')
+            	   // tooltips with site name and artwork number appear on mouseover
+            	   .on('mouseover', function (d) {
+            	       div.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+        	       	   div.html(d.properties.nom + ' : <br>' + d.properties.annee_ouve )
+                           .style("left",  (d3.event.pageX) + "px")
+                           .style("top", (d3.event.pageY - 28) + "px")
+                       // circle changes color on mouseover
+                       d3.select(this)
+                           .style("fill", "purple");
+            	   })
+            	   // tooltips disappear on mouseout
+            	   .on("mouseout", function(d) {
+                       div.transition()
+                           .duration(200)
+                           .style("opacity", 0)
+                       // circle gets its original color back
+                       d3.select(this)
+                           .style("fill", "black");
+                   });
+            });
+            
+            
+            // time slider
+            var dataTime = d3.range(0, 8).map(function(d) {
+                return new Date(1950 + 10*d, 1, 1); // every 10 years from 1910, with 12 values (up to 2020)
+            });
+            
+            var sliderTime = d3
+                .sliderBottom()
+                .min(d3.min(dataTime))
+                .max(d3.max(dataTime))
+                .step(1000 * 60 * 60 * 24 * 365 * 10) // step : every ten years
+                .width(w*0.8)
+                .tickFormat(d3.timeFormat('%Y'))
+                .tickValues(dataTime)
+                .default(new Date(1910, 1, 1)) // default date 01/01/1910
+                //.on('onchange', val => {
+                //    d3.select('p#value-time').text(d3.timeFormat('%Y')(val));
+                .on('onchange', function () {
+                   year = (sliderTime.value().getFullYear());
+            	   g3.selectAll("circle")
+            	       .transition()
+            	       .duration(500)
+            	       .attr('r', function (d) { 
+            	           if (d.properties.annee_ouve <= year) {
+            	               return 3;
+            	           } else {
+            	               return 0;	
+            	           }
+            	       } )
+                })
+        
+            var gTime = d3
+                .select('#slider')
+                .append('svg')
+                .attr('width', w)
+                .attr('height', 100)
+                .append('g')
+                .attr('transform', 'translate(20,20)');
+            
+            gTime.call(sliderTime);
+            
+            d3.select('p#value-time').text(d3.timeFormat('%Y')(sliderTime.value()));
+            
+            
+            // zoom and pan with mouse
+            var zoom = d3.zoom()
+                .scaleExtent([1,40])
+                .translateExtent([[0,0], [w, h]])
+                .extent([[0, 0], [w, h]])
+                .on("zoom", zoomed);
+                
+            svg
+                .call(zoom);
+                
+            function zoomed(){
+                // variable for zoom scale
+                k = d3.event.transform.k;
+                // zoom for all groups
+                g1.attr("transform", d3.event.transform);
+                g2.attr("transform", d3.event.transform);
+                g3.attr("transform", d3.event.transform);
+                // rescale contries outline so that it does not get too wide when zooming
+                g1.selectAll("path")
+                    .attr("d", path.projection(projection))
+                    .attr('stroke-width', 1/k);
+                // rescale graticules outline so that it does not get too wide when zooming
+                g2.selectAll("path")
+                    .attr("d", path.projection(projection))
+                    .attr('stroke-width', 1/k);
+                // rescale circle size so that they don't get too big when zooming
+                g3.selectAll("circle")
+                    //.attr("r", function() {console.log(zoom.scale()); return d3.select(this).attr("r")/zoom.scale()});
+                    .attr("r", function(d) {
+                        year = (sliderTime.value().getFullYear());
+                        colname = 'oeuvres_' + (year-10) + '_' + (year-1);
+                        return calc_radius(d.properties[colname])/k
+                    });
+            }  
+
+            
+        </script>
+    </body>
+</html>
